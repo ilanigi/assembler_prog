@@ -16,9 +16,6 @@ typedef struct {
     char attribute[80];
 }lable_table_line;
 
-/* this method construct a new lable table. it shuold onlt be used once.*/
-
-
 /* this method enter a new line to the lable table*/
 lable_table_line ** add_line_to_lable_table(lable_table_line ** current, int new_value, char new_symbol[], char new_attribute[],int * lable_table_size)
 {
