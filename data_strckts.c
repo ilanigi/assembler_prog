@@ -1,27 +1,32 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#define MAX_SYMBOL_SIZE 80
+#define MAX_ATTRIBUTES_SIZE 25
+enum {mov,cmp,add,sub,lea,	clr,not,inc,dec,jmp,bne,jsr,red,prn,str,stop};
+int func_table[][] = {{mov},{cmp},{add},{sub},{lea},{clr},{not},{inc},{dec},{jmp},{bne},{jsr},{red},{prn},{str},{stop}};
+
 /*-----------------------lable table--------------------------*/
 
 
-/*constans*/
-const int MAX_SYMBOL_SIZE = 80;
-const int MAX_ATTRIBUTES_SIZE = 25;
+/*declerations*/
 int lable_table_size;
 
 /*line structure in the table.*/
 typedef struct {
-    char symbol[80];
+    char symbol[MAX_SYMBOL_SIZE];
     int value;
-    char attribute[80];
+    char attribute[MAX_ATTRIBUTES_SIZE];
 }lable_table_line;
+
+
 
 /* this method enter a new line to the lable table*/
 lable_table_line ** add_line_to_lable_table(lable_table_line ** current, int new_value, char new_symbol[], char new_attribute[],int * lable_table_size)
 {
 	/*increasing table line*/
 	lable_table_line ** temp_table;
-	/*if no lable table - creat one*/
+	/*if no lable table - create one*/
 	if (!*lable_table_size) 
 		temp_table = malloc(sizeof(lable_table_line *));
 	
@@ -91,4 +96,14 @@ int main()
     return  0;
 }
 
-/*------------------something else--------------------------*/
+/*-----------------------a single word--------------------------*/
+
+typedef struct {
+   unsigned int destenation : 2;
+   unsigned int source : 2;
+   unsigned int funct : 4;
+   unsigned int opcode : 4;
+} word ;
+
+/*-----------------------somthing else--------------------------*/
+
