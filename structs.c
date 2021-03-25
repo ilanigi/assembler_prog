@@ -6,38 +6,6 @@
 
 /*-----------------------a-single-word--------------------------*/
 
-void print_word(word word_toprint)
-{
-	int i;
-	int mask;
-	short int temp;
-	/*if all parameters are 0, print nothing */
-	if (!(word_toprint.opcode || word_toprint.funct || word_toprint.source || word_toprint.destenation))
-	{
-		printf("000000000000");
-		return;
-	}
-	temp = word_toprint.opcode;
-	for (i = 0, mask = 8; mask; mask >>= 1, i++)
-	{
-		printf("%d",(word_toprint.opcode & mask) >> (3-i));
-	}
-	
-	for (i = 0, mask = 8; mask; mask >>= 1, i++)
-	{
-		printf("%d",(word_toprint.funct & mask) >> (3-i) );
-	}
-	
-	for (i = 0, mask = 2; mask; mask >>= 1, i++)
-	{
-		printf("%d",(word_toprint.source & mask) >> (1 - i));
-	}
-
-	for (i = 0, mask = 2; mask; mask >>= 1, i++)
-	{
-		printf("%d",(word_toprint.destenation & mask) >> (1 - i));
-	}
-}	
 /*enter an imidate nambuer into a word */
 void put_immediate_to_word(word * current,int num)
 {
@@ -54,32 +22,47 @@ void put_immediate_to_word(word * current,int num)
 
 /*-----------------------label-table--------------------------*/
 
-/* this method inserts a new line to the lable table*/
-void add_line_to_label_table(label_table_line *** current, int new_value, char new_label[], char new_attribute[],int * label_table_size)
+/* this method inserts a new line to the label table*/
+void add_line_to_label_table(label_table_line *** current, int new_value, char new_label[], int new_attribute,int * label_table_size, int * label_table_true_size)
 {
 	label_table_line * temp_line;
 	/*increasing table line*/
 	label_table_line ** temp_table;
-	/*if no lable table - create one*/
-	if (!*label_table_size) 
-		temp_table = malloc(sizeof(label_table_line *));
-	
-	else
-		temp_table = realloc(*current,sizeof(label_table_line *) * ((*label_table_size)+1));
+	/*if no label table - create one*/
 
-	if(!temp_table)
+	if (!*label_table_true_size) 
+	{
+		temp_table = malloc(sizeof(label_table_line *));
+		temp_line = malloc(sizeof(label_table_line));
+		(*label_table_true_size)++;
+		if(!temp_table || !temp_line)
 		{
-			printf("FATAL ERROR: no space in disk");
+			printf("FATAL ERROR: no space in disk\n");
 			return;
 		}	
-	
-	/*making space for new line struct*/
-	temp_line = malloc(sizeof(label_table_line));
+	}
+	else if(*label_table_size == *label_table_true_size)
+	{
+		temp_table = realloc(*current,sizeof(label_table_line *) * ((*label_table_true_size)+1));
+		(*label_table_true_size)++;
+		if(!temp_table)
+			{
+				printf("FATAL ERROR: no space in disk\n");
+				return;
+			}	
+		/*making space for new line struct*/
+		temp_line = malloc(sizeof(label_table_line));
+	}
+	else
+	{
+		temp_table = *current;
+		temp_line = (*current)[*label_table_size];
+	}
 	
 	/*insert value of new line*/
 	temp_line -> value = new_value;
 	strcpy(temp_line -> label,new_label);
-	strcpy(temp_line -> attribute,new_attribute);
+	temp_line -> attribute = new_attribute;
 	/*putting new line in table*/
 	temp_table[(*label_table_size)] = temp_line;
 
@@ -87,22 +70,6 @@ void add_line_to_label_table(label_table_line *** current, int new_value, char n
 
     *current = temp_table;
 	return;
-}
-
-void print_label_table(label_table_line ** table,int label_table_size)
-{
-    int i;
-	if (!label_table_size)
-	{
-		printf("lable table is empty\n");	
-		return;	
-	}
-	printf("symbol\tvalue\tattribute\n");
-	for (i = 0; i < label_table_size; i++)
-	{
-		printf("%s\t%d\t\t%s\n",table[i]->label,table[i]->value,table[i]->attribute);
-	}
-	return;    
 }
 
 void erase_label_table(label_table_line ** table,int * label_table_size)
@@ -114,7 +81,6 @@ void erase_label_table(label_table_line ** table,int * label_table_size)
 	}
 	free(table);
 	*label_table_size = 0;
-	printf("lable table erased sucsesfully\n");
 }
 
 
@@ -128,26 +94,41 @@ and one for data table (only .data and .string)
 
 
 /* this method enter a new line to the memory table*/
-void add_line_to_memory_table(memory_table_line *** current_table, int new_address, word new_machine_code ,char new_ARE,char new_label[], int * memory_table_size, int new_line_code_num)
+void add_line_to_memory_table(memory_table_line *** current, int new_address, word new_machine_code ,char new_ARE,char new_label[], int * memory_table_size,int * memory_table_true_size, int new_line_code_num)
 {
 	memory_table_line * temp_line;
 	/*increasing table line*/
 	memory_table_line ** temp_table;
-	/*if there is no lable table - create one*/
-	if (!*memory_table_size) 
+	/*if there is no label table - create one*/
+	if (!*memory_table_true_size)
+	{ 
 		temp_table = malloc(sizeof(memory_table_line *));
-	
-	else
-		temp_table = realloc(*current_table,sizeof(memory_table_line *) * ((*memory_table_size)+1));
+		temp_line = malloc(sizeof(memory_table_line));
+		(* memory_table_true_size)++;
+		if(!temp_table || !temp_line)
+		{
+			printf("FATAL ERROR: no space in disk\n");
+			return;
+		}
+	}
+	else if (*memory_table_true_size == *memory_table_size)
+	{
+		temp_table = realloc(*current,sizeof(memory_table_line *) * ((*memory_table_true_size)+1));
+		(*memory_table_true_size)++;
 
 	if(!temp_table)
 		{
-			printf("FATAL ERROR: no space in disk");
+			printf("FATAL ERROR: no space in disk\n");
 			return;
 		}	
-	
-	/*making space for new line struct*/
-	temp_line = malloc(sizeof(memory_table_line));
+		/*making space for new line struct*/
+		temp_line = malloc(sizeof(memory_table_line));
+	}
+	else
+	{
+		temp_table = *current;
+		temp_line = (*current)[*memory_table_size];
+	}
 	
 	/*insert value of new line*/
 	temp_line -> address = new_address;
@@ -161,37 +142,8 @@ void add_line_to_memory_table(memory_table_line *** current_table, int new_addre
 
 	(*memory_table_size)++;
 
-    *current_table = temp_table;
+    *current = temp_table;
 	return;
-}
-void print_memory_table(memory_table_line ** table,int memory_table_size)
-{
-    int i;
-
-	if (!memory_table_size)
-	{
-		printf("memory table is empty\n");	
-		return;	
-	}
-	/*first line is headers for table*/
-	printf("address\tmachine code\t\"ARE\"\tlabel\n");
-	for (i = 0; i < memory_table_size; i++)
-	{
-		/*add zero for leading zero, if necessary*/
-		if (table[i]->address <= 999)
-			printf("0%d\t",table[i]->address);
-		else
-			printf("%d\t",table[i]->address);
-	
-		print_word(table[i]->machine_code);
-	
-		printf("\t");
-		
-		printf("%c\t",table[i]->ARE);
-	
-		printf("%s\n",table[i]->label);
-	}
-	return;    
 }
 
 /*free all memory of memory table - at end of the second run*/
@@ -207,7 +159,6 @@ void erase_memory_table(memory_table_line ** table,int * memory_table_size)
 	/*free table base array*/
 	free(table);
 	*memory_table_size = 0;
-	printf("memory table erased sucsesfully\n");
 }
 /*--------------------------hash-table----------------------------*/
 
@@ -215,7 +166,9 @@ void erase_memory_table(memory_table_line ** table,int * memory_table_size)
 int hash_function(char * input,int table_size)
 {
     if (input[0] == '.') return 0;
-	return ((tolower(input[0]) - 'a') % table_size);
+	if (input[0] >= '0' && input[0] <= '9')
+		return  (((input[0] - '0' + 1) * (input[0] - '0' + 1)) % table_size);
+	return (((tolower(input[0]) - 'a') * (tolower(input[0]) - 'a')) % table_size);
 }
 
 
@@ -224,7 +177,7 @@ void insert_to_hash_table(int key, char* buf,node** hash_table)
     node* new_ptr;
     if (!(new_ptr  = malloc(sizeof(node))))
     {
-		printf("no place in memory\n");
+		printf("FATAL ERROR: no space in disk\n");
         return;
     }
     strcpy(new_ptr->name, buf);
@@ -252,7 +205,7 @@ void insert_to_func_hash_table(int key, char * buf, short int num, func_node** h
     func_node* new_ptr;
     if (!(new_ptr  = malloc(sizeof(func_node))))
     {
-		printf("no place in memory\n");
+			printf("FATAL ERROR: no space in disk\n");
         return;
     }
 
@@ -288,7 +241,7 @@ int is_in_hash_table(node ** hash_table,int table_size, char* buf)
 		node * node_ptr = hash_table[key];
 		while (1)
 		{
-			if (!strcmp(node_ptr->name,buf))
+		if (!strcmp(node_ptr->name,buf))
 			{
 				return 1;
 			}
@@ -301,7 +254,7 @@ int is_in_hash_table(node ** hash_table,int table_size, char* buf)
 /*return func num if func valid, else return -1*/
 int is_valid_func(func_node ** hash_table, char* buf)
 {
-	int key = hash_function(buf,16);
+	int key = hash_function(buf,FUNCS_AMOUNT);
 	if (hash_table[key] == NULL) return 0;
 	else
 	{
@@ -316,4 +269,55 @@ int is_valid_func(func_node ** hash_table, char* buf)
 			else node_ptr = node_ptr->next;
 		}
 	}
+}
+
+void erase_func_hash_table(func_node ** func_hash_table, int func_hash_table_size)
+{
+	int i;
+
+	for(i = 0; i < func_hash_table_size; i++)
+	{
+		if(func_hash_table[i] != 0)
+		{
+			func_recurtion_erase(func_hash_table[i]->next);
+			free(func_hash_table[i]);
+		}
+	}
+	return;
+}
+
+void func_recurtion_erase(func_node * ptr)
+{
+	if (ptr->name != 0)
+	{
+	func_recurtion_erase(ptr->next);
+	free(ptr);	
+	}
+	else return;
+}
+
+void erase_hash_table(node ** hash_table, int hash_table_size)
+{
+	int i;
+
+	for(i = 0; i < hash_table_size; i++)
+	{
+		if(hash_table[i] != 0)
+		{
+			recurtion_erase(hash_table[i]->next);
+			free(hash_table[i]);
+			hash_table[i] = NULL;
+		}
+	}
+	return;
+}
+
+void recurtion_erase(node * ptr)
+{
+	if (ptr->name != 0)
+	{
+	recurtion_erase(ptr->next);
+	free(ptr);	
+	}
+	else return;
 }

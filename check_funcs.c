@@ -55,19 +55,20 @@ int is_extern(char ** slot_array,int label_flag, int argument_num)
 	return !(strcmp(slot_array[i],".extern"));
 }
 
-/*check if a given lable is vaild, if so enter it to hash_saved_words and return 1, else return 0*/
-int is_valid_label(char * label, node** hash_saved_words, node** hash_lable_names)
+/*check if a given label is vaild, if so enter it to hash_saved_words and return 1, else return 0*/
+int is_valid_label(char * label, node** hash_saved_words, node** hash_label_names)
 {
-	if( !is_in_hash_table(hash_saved_words,26,label)	 &&
-		!is_in_hash_table(hash_lable_names,26,label)	)
-	{
-		insert_to_hash_table(hash_function(label,26), label,hash_lable_names);
-		return 1;
-	}
-	return 0;
+	if(is_in_hash_table(hash_saved_words,HASH_TABLE_SIZE,label))
+		return in_saved_words;
+	if (is_in_hash_table(hash_label_names,HASH_TABLE_SIZE,label))
+		return alredy_exsiet;
+	if (label[0] <= '9' && label[0] >= '0')
+		return imd_letter;
+	return valid;
 }
 
-/*checks if a given char is a valid imidiant number*/
+
+/*checks if a given char is a valid immediate number*/
 int is_valid_imd(char * imd_val)
 {
 	int i = 1;

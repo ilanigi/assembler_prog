@@ -8,17 +8,15 @@
 
 
 
-int print_to_files(char * current_file_name, memory_table_line ** data_table, int data_table_size, memory_table_line ** instruction_table, int instruction_table_size,label_table_line ** label_table, int label_table_size, label_table_line ** extern_tabel, int extern_tabel_size, int ICF, int DCF,int has_entry)
+int print_to_files(char * current_file_name, memory_table_line ** data_table, int data_table_size, memory_table_line ** instruction_table, int instruction_table_size,label_table_line ** label_table, int label_table_size, label_table_line ** extern_table, int extern_table_size,label_table_line ** entry_table, int entry_table_size ,int ICF, int DCF)
 {
-    int i;
     FILE * file_ptr;
-    char file_name[80];
+    char file_name[MAX_FILE_NAME_SIZE]; 
     strcpy(file_name,current_file_name);
     strcat(file_name,".ob");
-    printf("%s\n", file_name);
-    if (!(file_ptr = fopen(file_name,"w+")))
+    if (!(file_ptr = fopen(file_name,"w")))
     {
-        printf("memory error, can't open new file\n");
+        printf("FATAL ERROR: can't open new file: .ob file\n");
         return 1;
     }
 
@@ -26,29 +24,29 @@ int print_to_files(char * current_file_name, memory_table_line ** data_table, in
     print_table_to_file(data_table, data_table_size, file_ptr, 0, 0);
     fclose(file_ptr);
 
-    if (extern_tabel_size)
+    if (extern_table_size)
     {
         strcpy(file_name,current_file_name);
         strcat(file_name,".ext");
         if (!(file_ptr = fopen(file_name,"w")))
         {
-            printf("memory error, can't open new file\n");
+            printf("FATAL ERROR: can't open new file: .ext file\n");
             return 1;
         }
-        print_to_extern(extern_tabel,extern_tabel_size,file_ptr);
+        print_to_extern(extern_table,extern_table_size,file_ptr);
         fclose(file_ptr);
     }
 
-    if (has_entry)
+    if (entry_table_size)
     {
         strcpy(file_name,current_file_name);
         strcat(file_name,".ent");
         if (!(file_ptr = fopen(file_name,"w")))
         {
-            printf("memory error, can't open new file\n");
+            printf("FATAL ERROR: can't open new file: .ent file\n");
             return 1;
         }
-        print_to_entery(label_table, label_table_size, file_ptr);
+        print_to_entery(entry_table, entry_table_size, file_ptr);
         fclose(file_ptr);
     }    
     return 0;
@@ -78,7 +76,6 @@ void print_table_to_file(memory_table_line** table,int table_size,FILE * file_pt
 
 void print_word_to_file(word word_toprint, FILE * file_ptr)
 {
-	int i;
     int temp;
 	int mask = 15;
     
@@ -124,14 +121,11 @@ void print_to_entery(label_table_line ** label_table, int label_table_size, FILE
     int i;
     for(i = 0; i < label_table_size; i++)
     {
-        if(!strcmp(label_table[i]->attribute,".entry"))
-        {
-            fprintf(file_ptr,"%s ",label_table[i]->label);
-            if (label_table[i]->value <= 999)
-			    fprintf(file_ptr,"0%d\n",label_table[i]->value);
-            else
-			    fprintf(file_ptr,"%d\n",label_table[i]->value);  
-        }
+        fprintf(file_ptr,"%s ",label_table[i]->label);
+        if (label_table[i]->value <= 999)
+            fprintf(file_ptr,"0%d\n",label_table[i]->value);
+        else
+            fprintf(file_ptr,"%d\n",label_table[i]->value);  
     }
     return;
-}
+}	
